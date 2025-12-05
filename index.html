@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>話題製造機 - 聚會破冰 App</title>
+    <title>話題製造機 - 聚會破冰 RWD 網站</title>
     <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
@@ -36,9 +36,9 @@
         <h1 class="text-3xl font-bold text-gray-800 mb-2">話題製造機 🎲</h1>
         <p class="text-gray-500 mb-6 text-center">專為聚會設計的破冰與深度對話工具</p>
         
-        <!-- User ID Display (Required for multi-user apps) -->
+        <!-- User ID Display (Static/Demo for pure frontend) -->
         <p class="text-xs text-gray-400 mb-4 self-end">
-            用戶 ID (可分享此 ID 讓朋友加入同一房間): <span id="user-id-display" class="font-mono text-gray-600 font-bold">載入中...</span>
+            狀態: <span id="user-id-display" class="font-mono text-gray-600 font-bold">純前端本地模式</span>
         </p>
 
         <!-- 類別選擇與顯示區域 -->
@@ -55,23 +55,23 @@
         <div id="question-card" class="w-full bg-indigo-500 text-white rounded-2xl p-8 text-center min-h-[250px] flex flex-col justify-center items-center shadow-lg transition duration-300 transform hover:scale-[1.01]">
             <p class="text-xl font-medium opacity-80 mb-3" id="question-index"></p>
             <p class="text-3xl sm:text-4xl font-extrabold leading-snug" id="current-question">
-                載入中... 正在連接資料庫。
+                載入中... 請選擇一個主題開始遊戲！
             </p>
         </div>
 
         <!-- 控制按鈕區域 -->
         <div class="mt-8 w-full flex flex-col sm:flex-row justify-center gap-4">
-            <button id="next-button" class="btn-primary bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md flex-1 text-lg" disabled>
+            <button id="next-button" class="btn-primary bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md flex-1 text-lg">
                 下一題 (換人回答)
             </button>
-            <button id="reset-button" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-md text-lg transition duration-150 sm:flex-none" disabled>
+            <button id="reset-button" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-md text-lg transition duration-150 sm:flex-none">
                 重新開始此主題
             </button>
         </div>
 
         <!-- 新增按鈕 -->
         <button id="add-question-btn" class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-md text-lg transition duration-150">
-            + 新增自訂題目
+            + 新增自訂題目 (本機儲存)
         </button>
 
         <!-- 狀態訊息 -->
@@ -93,27 +93,8 @@
         </div>
     </div>
 
-    <!-- Firebase SDK Imports -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        // 設定 Firebase 日誌級別
-        // setLogLevel('debug'); // 建議在除錯時開啟，現在先保持關閉以避免訊息干擾
-
-        // 全域變數初始化
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let db;
-        let auth;
-        let userId = null;
-        let isAuthReady = false;
-
-        // 核心問題資料庫
+    <script>
+        // 核心問題資料庫 (硬編碼)
         const HARDCODED_QUESTIONS = {
             'drinking_fun': {
                 name: '🍺 酒局破冰 (內建)',
@@ -148,9 +129,9 @@
                 ]
             },
             'custom_user': {
-                name: '📝 自訂題目 (即時同步)',
-                description: '由玩家共同新增的題目，即時同步更新。',
-                prompts: [] // 將由 Firestore 填充
+                name: '📝 自訂題目 (本地儲存)',
+                description: '由用戶在本機新增的題目，不與他人同步。',
+                prompts: [] // 將由 localStorage 填充
             }
         };
 
@@ -164,60 +145,94 @@
         const resetButton = document.getElementById('reset-button');
         const messageEl = document.getElementById('message');
         const questionCard = document.getElementById('question-card');
-        const userIdDisplay = document.getElementById('user-id-display');
         
-        // Modal 相關元素
-        const addQuestionBtn = document.getElementById('add-question-btn');
         const addQuestionModal = document.getElementById('add-question-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const submitQuestionBtn = document.getElementById('submit-question-btn');
         const newQuestionInput = document.getElementById('new-question-input');
         const modalMessage = document.getElementById('modal-message');
 
-
         let currentCategoryKey = '';
         let currentIndex = 0;
 
-        // --- Firebase/Firestore 邏輯 ---
-
-        async function setupFirebase() {
+        // --- 本地儲存邏輯 ---
+        
+        function loadCustomQuestions() {
+            const custom = localStorage.getItem('localCustomQuestions');
             try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // 認證流程
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                // 監聽認證狀態變化
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        userIdDisplay.textContent = userId;
-                        isAuthReady = true;
-                        
-                        // 認證完成後，才開始載入資料和設定 UI
-                        initializeCategories(true);
-                        loadState();
-                        setupRealtimeListener();
-                        // 啟用按鈕
-                        nextButton.disabled = false;
-                        resetButton.disabled = false;
-                    } else {
-                        userIdDisplay.textContent = '無法取得 ID';
-                        currentQuestionEl.textContent = '連接資料庫失敗，請稍後再試。';
-                    }
-                });
-
-            } catch (error) {
-                console.error("Firebase Initialization or Auth Error:", error);
-                userIdDisplay.textContent = '錯誤';
-                currentQuestionEl.textContent = '初始化錯誤，請檢查主控台。';
+                // 嘗試解析 JSON，如果解析失敗則返回空陣列
+                return custom ? JSON.parse(custom) : [];
+            } catch (e) {
+                console.error("Error parsing local questions:", e);
+                return [];
             }
         }
 
-        // 監聽 Firestore 上的自訂題目
+        function saveQuestionLocally(promptText) {
+            const customPrompts = loadCustomQuestions();
+            customPrompts.push(promptText);
+            // 將更新後的陣列存回 localStorage
+            localStorage.setItem('localCustomQuestions', JSON.stringify(customPrompts));
+            
+            // 立即更新記憶體中的題庫
+            ALL_QUESTIONS['custom_user'].prompts = customPrompts;
+
+            // 如果當前選中自訂題目，則刷新顯示
+            if (currentCategoryKey === 'custom_user') {
+                displayQuestion();
+            }
+        }
+
+        // --- 核心 App 邏輯 (無 Firebase) ---
+        
+        function loadApp() {
+            // 1. 載入本地儲存的自訂題目
+            ALL_QUESTIONS['custom_user'].prompts = loadCustomQuestions();
+
+            // 2. 初始化分類選單
+            initializeCategories();
+            
+            // 3. 載入上次的進度
+            loadState();
+        }
+
+        // 初始化：載入類別選項
+        function initializeCategories() {
+            for (const key in ALL_QUESTIONS) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = ALL_QUESTIONS[key].name;
+                categorySelect.appendChild(option);
+            }
+        }
+
+        // 從 localStorage 載入目前的進度狀態
+        function loadState() {
+            const savedCategory = localStorage.getItem('conversationStarterCategory');
+            const savedIndex = localStorage.getItem('conversationStarterIndex');
+
+            if (savedCategory && ALL_QUESTIONS[savedCategory]) {
+                currentCategoryKey = savedCategory;
+                currentIndex = parseInt(savedIndex) || 0;
+            } else {
+                // 預設選擇第一個類別
+                currentCategoryKey = Object.keys(ALL_QUESTIONS)[0];
+                currentIndex = 0;
+            }
+            categorySelect.value = currentCategoryKey;
+            displayQuestion();
+        }
+
+        // 將目前的狀態儲存到 localStorage
+        function saveState() {
+            localStorage.setItem('conversationStarterCategory', currentCategoryKey);
+            localStorage.setItem('conversationStarterIndex', currentIndex.toString());
+        }
+
+        // 顯示當前問題
+        function displayQuestion() {
+            const currentPrompts = ALL_QUESTIONS[currentCategoryKey].prompts;
+            messageEl.classList.add('hidden');
+            nextButton.disabled = false;
+            resetButton.disabled = false;
+            questionCard.classList.re
