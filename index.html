@@ -1,239 +1,344 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>話題製造機 - 聚會破冰 RWD 網站</title>
-    <!-- 載入 Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        /* 使用 Noto Sans TC 讓中文字體顯示更清晰美觀 */
-        body {
-            font-family: 'Noto Sans TC', 'Inter', sans-serif;
-            background-color: #f7f9fb;
-        }
-        /* 自訂按鈕樣式 */
-        .btn-primary {
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-        }
-        .btn-primary:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        }
-    </style>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>話題製造機 - 聚會破冰 RWD 網站</title>
+   <!-- 載入 Tailwind CSS -->
+   <script src="https://cdn.tailwindcss.com"></script>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+   <style>
+       /* 使用 Noto Sans TC 讓中文字體顯示更清晰美觀 */
+       body {
+           font-family: 'Noto Sans TC', 'Inter', sans-serif;
+           background-color: #f7f9fb;
+       }
+       /* 自訂按鈕樣式 */
+       .btn-primary {
+           transition: all 0.2s ease-in-out;
+           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+       }
+       .btn-primary:hover {
+           transform: translateY(-2px);
+           box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+       }
+       .btn-primary:active {
+           transform: translateY(0);
+           box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+       }
+   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <!-- 主應用程式容器 -->
-    <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl p-6 md:p-10 flex flex-col items-center">
+   <!-- 主應用程式容器 -->
+   <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl p-6 md:p-10 flex flex-col items-center">
 
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">話題製造機 🎲</h1>
-        <p class="text-gray-500 mb-6 text-center">專為聚會設計的破冰與深度對話工具</p>
-        
-        <!-- User ID Display (Static/Demo for pure frontend) -->
-        <p class="text-xs text-gray-400 mb-4 self-end">
-            狀態: <span id="user-id-display" class="font-mono text-gray-600 font-bold">純前端本地模式</span>
-        </p>
+       <h1 class="text-3xl font-bold text-gray-800 mb-2">話題製造機 🎲</h1>
+       <p class="text-gray-500 mb-6 text-center">專為聚會設計的破冰與深度對話工具</p>
+       
+       <!-- User ID Display (Static/Demo for pure frontend) -->
+       <p class="text-xs text-gray-400 mb-4 self-end">
+           狀態: <span id="user-id-display" class="font-mono text-gray-600 font-bold">純前端本地模式</span>
+       </p>
 
-        <!-- 類別選擇與顯示區域 -->
-        <div class="w-full mb-8">
-            <label for="category-select" class="block text-lg font-medium text-gray-700 mb-2">
-                選擇主題：
-            </label>
-            <select id="category-select" class="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-800 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition duration-150">
-                <!-- 選項將由 JS 動態生成 -->
-            </select>
-        </div>
+       <!-- 類別選擇與顯示區域 -->
+       <div class="w-full mb-8">
+           <label for="category-select" class="block text-lg font-medium text-gray-700 mb-2">
+               選擇主題：
+           </label>
+           <select id="category-select" class="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-800 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition duration-150">
+               <!-- 選項將由 JS 動態生成 -->
+           </select>
+       </div>
 
-        <!-- 問題顯示卡片 -->
-        <div id="question-card" class="w-full bg-indigo-500 text-white rounded-2xl p-8 text-center min-h-[250px] flex flex-col justify-center items-center shadow-lg transition duration-300 transform hover:scale-[1.01]">
-            <p class="text-xl font-medium opacity-80 mb-3" id="question-index"></p>
-            <p class="text-3xl sm:text-4xl font-extrabold leading-snug" id="current-question">
-                載入中... 請選擇一個主題開始遊戲！
-            </p>
-        </div>
+       <!-- 問題顯示卡片 -->
+       <div id="question-card" class="w-full bg-indigo-500 text-white rounded-2xl p-8 text-center min-h-[250px] flex flex-col justify-center items-center shadow-lg transition duration-300 transform hover:scale-[1.01]">
+           <p class="text-xl font-medium opacity-80 mb-3" id="question-index"></p>
+           <p class="text-3xl sm:text-4xl font-extrabold leading-snug" id="current-question">
+               載入中... 請選擇一個主題開始遊戲！
+           </p>
+       </div>
 
-        <!-- 控制按鈕區域 -->
-        <div class="mt-8 w-full flex flex-col sm:flex-row justify-center gap-4">
-            <button id="next-button" class="btn-primary bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md flex-1 text-lg">
-                下一題 (換人回答)
-            </button>
-            <button id="reset-button" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-md text-lg transition duration-150 sm:flex-none">
-                重新開始此主題
-            </button>
-        </div>
+       <!-- 控制按鈕區域 -->
+       <div class="mt-8 w-full flex flex-col sm:flex-row justify-center gap-4">
+           <button id="next-button" class="btn-primary bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md flex-1 text-lg">
+               下一題 (換人回答)
+           </button>
+           <button id="reset-button" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-md text-lg transition duration-150 sm:flex-none">
+               重新開始此主題
+           </button>
+       </div>
 
-        <!-- 新增按鈕 -->
-        <button id="add-question-btn" class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-md text-lg transition duration-150">
-            + 新增自訂題目 (本機儲存)
-        </button>
+       <!-- 新增按鈕 -->
+       <button id="add-question-btn" class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-md text-lg transition duration-150">
+           + 新增自訂題目 (本機儲存)
+       </button>
 
-        <!-- 狀態訊息 -->
-        <p id="message" class="mt-6 text-lg text-gray-600 font-medium hidden">
-            太棒了！這個主題的所有題目都回答完畢囉！
-        </p>
-    </div>
-    
-    <!-- Modal for Adding Question -->
-    <div id="add-question-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <h3 class="text-xl font-bold mb-4 text-gray-800">新增你的問題</h3>
-            <textarea id="new-question-input" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 mb-4" placeholder="輸入一個你想問大家的問題..."></textarea>
-            <div class="flex justify-end gap-3">
-                <button id="close-modal-btn" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg text-gray-800 font-semibold">取消</button>
-                <button id="submit-question-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-semibold">送出題目</button>
-            </div>
-            <p id="modal-message" class="mt-3 text-sm text-red-500 hidden"></p>
-        </div>
-    </div>
+       <!-- 狀態訊息 -->
+       <p id="message" class="mt-6 text-lg text-gray-600 font-medium hidden">
+           太棒了！這個主題的所有題目都回答完畢囉！
+       </p>
+   </div>
+   
+   <!-- Modal for Adding Question -->
+   <div id="add-question-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
+       <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+           <h3 class="text-xl font-bold mb-4 text-gray-800">新增你的問題</h3>
+           <textarea id="new-question-input" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 mb-4" placeholder="輸入一個你想問大家的問題..."></textarea>
+           <div class="flex justify-end gap-3">
+               <button id="close-modal-btn" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg text-gray-800 font-semibold">取消</button>
+               <button id="submit-question-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-semibold">送出題目</button>
+           </div>
+           <p id="modal-message" class="mt-3 text-sm text-red-500 hidden"></p>
+       </div>
+   </div>
 
-    <script>
-        // 核心問題資料庫 (硬編碼)
-        const HARDCODED_QUESTIONS = {
-            'drinking_fun': {
-                name: '🍺 酒局破冰 (內建)',
-                description: '適合微醺時的爆笑與真心話環節。',
-                prompts: [
-                    '你最開心的一次喝酒經驗是什麼？',
-                    '你喝醉後做過最丟臉/最搞笑的事情是什麼？',
-                    '你覺得誰的酒量最深藏不露？（必須猜一位在場的人）',
-                    '形容一下你宿醉時的樣子，並說出你這輩子發誓再也不喝的酒。',
-                    '如果你能與歷史上任何一位人物一起喝酒，你會選誰？喝什麼？'
-                ]
-            },
-            'family_time': {
-                name: '👨‍👩‍👧‍👦 家庭時光 (內建)',
-                description: '春節或家庭聚會，拉近彼此距離的溫馨問答。',
-                prompts: [
-                    '你童年時最喜歡的過年活動是什麼？',
-                    '你對家人說過最感動的一句話是什麼？（或是聽到最感動的）',
-                    '如果你能交換一天身體，你想成為家裡哪一位成員？為什麼？',
-                    '你從小到大最常被家裡誰稱讚？被稱讚什麼？',
-                    '說一件你和家人一起完成，讓你印象最深刻的事情。'
-                ]
-            },
-            'deep_thoughts': {
-                name: '🌌 深度對話 (內建)',
-                description: '探索內心、目標與個人故事的深度話題。',
-                prompts: [
-                    '請各位打開手機照片，挑選一張你近期拍攝的照片，並分享這張照片背後的故事。',
-                    '你近期做過最勇敢的決定是什麼？',
-                    '有沒有什麼是你過去諮詢我們的意見，但最後你堅持己見的？',
-                    '說說看你對半年及一年後有什麼興奮的規劃及計畫！'
-                ]
-            },
-            'custom_user': {
-                name: '📝 自訂題目 (本地儲存)',
-                description: '由用戶在本機新增的題目，不與他人同步。',
-                prompts: [] // 將由 localStorage 填充
-            }
-        };
+   <script>
+       // 核心問題資料庫 (硬編碼)
+       const HARDCODED_QUESTIONS = {
+           'drinking_fun': {
+               name: '🍺 酒局破冰 (內建)',
+               description: '適合微醺時的爆笑與真心話環節。',
+               prompts: [
+                   '你最開心的一次喝酒經驗是什麼？',
+                   '你喝醉後做過最丟臉/最搞笑的事情是什麼？',
+                   '你覺得誰的酒量最深藏不露？（必須猜一位在場的人）',
+                   '形容一下你宿醉時的樣子，並說出你這輩子發誓再也不喝的酒。',
+                   '如果你能與歷史上任何一位人物一起喝酒，你會選誰？喝什麼？'
+               ]
+           },
+           'family_time': {
+               name: '👨‍👩‍👧‍👦 家庭時光 (內建)',
+               description: '春節或家庭聚會，拉近彼此距離的溫馨問答。',
+               prompts: [
+                   '你童年時最喜歡的過年活動是什麼？',
+                   '你對家人說過最感動的一句話是什麼？（或是聽到最感動的）',
+                   '如果你能交換一天身體，你想成為家裡哪一位成員？為什麼？',
+                   '你從小到大最常被家裡誰稱讚？被稱讚什麼？',
+                   '說一件你和家人一起完成，讓你印象最深刻的事情。'
+               ]
+           },
+           'deep_thoughts': {
+               name: '🌌 深度對話 (內建)',
+               description: '探索內心、目標與個人故事的深度話題。',
+               prompts: [
+                   '請各位打開手機照片，挑選一張你近期拍攝的照片，並分享這張照片背後的故事。',
+                   '你近期做過最勇敢的決定是什麼？',
+                   '有沒有什麼是你過去諮詢我們的意見，但最後你堅持己見的？',
+                   '說說看你對半年及一年後有什麼興奮的規劃及計畫！'
+               ]
+           },
+           'custom_user': {
+               name: '📝 自訂題目 (本地儲存)',
+               description: '由用戶在本機新增的題目，不與他人同步。',
+               prompts: [] // 將由 localStorage 填充
+           }
+       };
 
-        let ALL_QUESTIONS = { ...HARDCODED_QUESTIONS }; // 可變動的題庫
+       let ALL_QUESTIONS = { ...HARDCODED_QUESTIONS }; // 可變動的題庫
 
-        // DOM 元素參考
-        const categorySelect = document.getElementById('category-select');
-        const currentQuestionEl = document.getElementById('current-question');
-        const questionIndexEl = document.getElementById('question-index');
-        const nextButton = document.getElementById('next-button');
-        const resetButton = document.getElementById('reset-button');
-        const messageEl = document.getElementById('message');
-        const questionCard = document.getElementById('question-card');
-        
-        const addQuestionModal = document.getElementById('add-question-modal');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const submitQuestionBtn = document.getElementById('submit-question-btn');
-        const newQuestionInput = document.getElementById('new-question-input');
-        const modalMessage = document.getElementById('modal-message');
+       // DOM 元素參考
+       const categorySelect = document.getElementById('category-select');
+       const currentQuestionEl = document.getElementById('current-question');
+       const questionIndexEl = document.getElementById('question-index');
+       const nextButton = document.getElementById('next-button');
+       const resetButton = document.getElementById('reset-button');
+       const messageEl = document.getElementById('message');
+       const questionCard = document.getElementById('question-card');
+       
+       const addQuestionModal = document.getElementById('add-question-modal');
+       const closeModalBtn = document.getElementById('close-modal-btn');
+       const submitQuestionBtn = document.getElementById('submit-question-btn');
+       const newQuestionInput = document.getElementById('new-question-input');
+       const modalMessage = document.getElementById('modal-message');
 
-        let currentCategoryKey = '';
-        let currentIndex = 0;
+       let currentCategoryKey = '';
+       let currentIndex = 0;
 
-        // --- 本地儲存邏輯 ---
-        
-        function loadCustomQuestions() {
-            const custom = localStorage.getItem('localCustomQuestions');
-            try {
-                // 嘗試解析 JSON，如果解析失敗則返回空陣列
-                return custom ? JSON.parse(custom) : [];
-            } catch (e) {
-                console.error("Error parsing local questions:", e);
-                return [];
-            }
-        }
+       // --- 本地儲存邏輯 ---
+       
+       function loadCustomQuestions() {
+           const custom = localStorage.getItem('localCustomQuestions');
+           try {
+               // 嘗試解析 JSON，如果解析失敗則返回空陣列
+               return custom ? JSON.parse(custom) : [];
+           } catch (e) {
+               console.error("Error parsing local questions:", e);
+               return [];
+           }
+       }
 
-        function saveQuestionLocally(promptText) {
-            const customPrompts = loadCustomQuestions();
-            customPrompts.push(promptText);
-            // 將更新後的陣列存回 localStorage
-            localStorage.setItem('localCustomQuestions', JSON.stringify(customPrompts));
-            
-            // 立即更新記憶體中的題庫
-            ALL_QUESTIONS['custom_user'].prompts = customPrompts;
+       function saveQuestionLocally(promptText) {
+           const customPrompts = loadCustomQuestions();
+           customPrompts.push(promptText);
+           // 將更新後的陣列存回 localStorage
+           localStorage.setItem('localCustomQuestions', JSON.stringify(customPrompts));
+           
+           // 立即更新記憶體中的題庫
+           ALL_QUESTIONS['custom_user'].prompts = customPrompts;
 
-            // 如果當前選中自訂題目，則刷新顯示
-            if (currentCategoryKey === 'custom_user') {
-                displayQuestion();
-            }
-        }
+           // 如果當前選中自訂題目，則刷新顯示
+           if (currentCategoryKey === 'custom_user') {
+               displayQuestion();
+           }
+       }
 
-        // --- 核心 App 邏輯 (無 Firebase) ---
-        
-        function loadApp() {
-            // 1. 載入本地儲存的自訂題目
-            ALL_QUESTIONS['custom_user'].prompts = loadCustomQuestions();
+       // --- 核心 App 邏輯 (無 Firebase) ---
+       
+       function loadApp() {
+           // 1. 載入本地儲存的自訂題目
+           ALL_QUESTIONS['custom_user'].prompts = loadCustomQuestions();
 
-            // 2. 初始化分類選單
-            initializeCategories();
-            
-            // 3. 載入上次的進度
-            loadState();
-        }
+           // 2. 初始化分類選單
+           initializeCategories();
+           
+           // 3. 載入上次的進度
+           loadState();
+       }
 
-        // 初始化：載入類別選項
-        function initializeCategories() {
-            for (const key in ALL_QUESTIONS) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = ALL_QUESTIONS[key].name;
-                categorySelect.appendChild(option);
-            }
-        }
+       // 初始化：載入類別選項
+       function initializeCategories() {
+           for (const key in ALL_QUESTIONS) {
+               const option = document.createElement('option');
+               option.value = key;
+               option.textContent = ALL_QUESTIONS[key].name;
+               categorySelect.appendChild(option);
+           }
+       }
 
-        // 從 localStorage 載入目前的進度狀態
-        function loadState() {
-            const savedCategory = localStorage.getItem('conversationStarterCategory');
-            const savedIndex = localStorage.getItem('conversationStarterIndex');
+       // 從 localStorage 載入目前的進度狀態
+       function loadState() {
+           const savedCategory = localStorage.getItem('conversationStarterCategory');
+           const savedIndex = localStorage.getItem('conversationStarterIndex');
 
-            if (savedCategory && ALL_QUESTIONS[savedCategory]) {
-                currentCategoryKey = savedCategory;
-                currentIndex = parseInt(savedIndex) || 0;
-            } else {
-                // 預設選擇第一個類別
-                currentCategoryKey = Object.keys(ALL_QUESTIONS)[0];
-                currentIndex = 0;
-            }
-            categorySelect.value = currentCategoryKey;
-            displayQuestion();
-        }
+           if (savedCategory && ALL_QUESTIONS[savedCategory]) {
+               currentCategoryKey = savedCategory;
+               currentIndex = parseInt(savedIndex) || 0;
+           } else {
+               // 預設選擇第一個類別
+               currentCategoryKey = Object.keys(ALL_QUESTIONS)[0];
+               currentIndex = 0;
+           }
+           categorySelect.value = currentCategoryKey;
+           displayQuestion();
+       }
 
-        // 將目前的狀態儲存到 localStorage
-        function saveState() {
-            localStorage.setItem('conversationStarterCategory', currentCategoryKey);
-            localStorage.setItem('conversationStarterIndex', currentIndex.toString());
-        }
+       // 將目前的狀態儲存到 localStorage
+       function saveState() {
+           localStorage.setItem('conversationStarterCategory', currentCategoryKey);
+           localStorage.setItem('conversationStarterIndex', currentIndex.toString());
+       }
 
-        // 顯示當前問題
-        function displayQuestion() {
-            const currentPrompts = ALL_QUESTIONS[currentCategoryKey].prompts;
-            messageEl.classList.add('hidden');
-            nextButton.disabled = false;
-            resetButton.disabled = false;
-            questionCard.classList.re
+       // 顯示當前問題
+       function displayQuestion() {
+           const currentPrompts = ALL_QUESTIONS[currentCategoryKey].prompts;
+           messageEl.classList.add('hidden');
+           nextButton.disabled = false;
+           resetButton.disabled = false;
+           questionCard.classList.remove('bg-gray-400');
+           questionCard.classList.add('bg-indigo-500');
+
+           if (currentPrompts.length === 0 && currentCategoryKey === 'custom_user') {
+               currentQuestionEl.textContent = `請點擊「+ 新增自訂題目 (本機儲存)」按鈕，為「${ALL_QUESTIONS[currentCategoryKey].name}」添加第一個問題！`;
+               questionIndexEl.textContent = '目前沒有題目';
+               nextButton.disabled = true;
+               return;
+           }
+           
+           if (currentIndex >= currentPrompts.length) {
+               // 題目已全部顯示完畢
+               currentQuestionEl.textContent = `🎉 主題 ${ALL_QUESTIONS[currentCategoryKey].name} 挑戰成功！`;
+               questionIndexEl.textContent = '已回答所有問題';
+               messageEl.textContent = `太棒了！這個主題的所有 ${currentPrompts.length} 個題目都回答完畢囉！按「重新開始」可以再玩一次！`;
+               messageEl.classList.remove('hidden');
+               nextButton.disabled = true;
+               questionCard.classList.remove('bg-indigo-500');
+               questionCard.classList.add('bg-gray-400');
+               saveState();
+           } else {
+               // 顯示當前題目
+               const questionNumber = currentIndex + 1;
+               currentQuestionEl.textContent = currentPrompts[currentIndex];
+               questionIndexEl.textContent = `第 ${questionNumber} / ${currentPrompts.length} 題`;
+               saveState();
+           }
+       }
+
+       // 換下一題
+       function nextQuestion() {
+           const currentPrompts = ALL_QUESTIONS[currentCategoryKey].prompts;
+           if (currentIndex < currentPrompts.length) {
+               currentIndex++;
+               displayQuestion();
+           }
+       }
+
+       // 重設目前主題的進度
+       function resetCategory() {
+           currentIndex = 0;
+           displayQuestion();
+           currentQuestionEl.textContent = `✅ 主題「${ALL_QUESTIONS[currentCategoryKey].name}」已重設！點擊「下一題」開始。`;
+           questionIndexEl.textContent = '準備開始...';
+           nextButton.disabled = false;
+           messageEl.classList.add('hidden');
+       }
+
+       // --- Modal 事件處理 (使用本地儲存) ---
+       
+       function handleSubmitQuestion() {
+           const prompt = newQuestionInput.value.trim();
+           if (prompt.length < 5) {
+               modalMessage.textContent = '題目內容太短，請輸入至少 5 個字。';
+               modalMessage.classList.remove('hidden');
+               return;
+           }
+           
+           submitQuestionBtn.textContent = '儲存中...';
+           submitQuestionBtn.disabled = true;
+
+           // 儲存到本地
+           saveQuestionLocally(prompt);
+           
+           newQuestionInput.value = '';
+           modalMessage.textContent = '題目新增成功！已儲存到「自訂題目 (本地儲存)」類別。';
+           modalMessage.classList.remove('hidden');
+           
+           setTimeout(() => {
+               addQuestionModal.classList.add('hidden');
+               submitQuestionBtn.textContent = '送出題目';
+               submitQuestionBtn.disabled = false;
+           }, 1500);
+       }
+
+
+       // --- 事件監聽器 ---
+
+       categorySelect.addEventListener('change', (event) => {
+           currentCategoryKey = event.target.value;
+           currentIndex = 0;
+           displayQuestion();
+       });
+
+       nextButton.addEventListener('click', nextQuestion);
+       resetButton.addEventListener('click', resetCategory);
+
+       document.getElementById('add-question-btn').addEventListener('click', () => {
+           addQuestionModal.classList.remove('hidden');
+           newQuestionInput.value = '';
+           modalMessage.classList.add('hidden');
+       });
+
+       closeModalBtn.addEventListener('click', () => {
+           addQuestionModal.classList.add('hidden');
+       });
+
+       submitQuestionBtn.addEventListener('click', handleSubmitQuestion);
+
+
+       // 應用程式啟動
+       window.onload = function() {
+           loadApp(); // 啟動 App
+       };
+   </script>
+</body>
+</html>
