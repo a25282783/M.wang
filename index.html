@@ -1,1306 +1,193 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>實時公車追蹤 🚌</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Heiti TC', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 0;
-        }
-
-        .main-container {
-            display: flex;
-            width: 100%;
-            min-height: 100vh;
-        }
-
-        .map-container {
-            flex: 1;
-            position: relative;
-            background: linear-gradient(135deg, #e8eaf6 0%, #f3e5f5 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 300px;
-        }
-
-        .map-canvas-wrapper {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        .control-panel {
-            width: 100%;
-            max-width: 500px;
-            background: white;
-            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.2);
-            display: flex;
-            flex-direction: column;
-            animation: slideInRight 0.6s ease-out;
-            overflow: hidden;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 28px 24px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .header p {
-            font-size: 13px;
-            opacity: 0.9;
-            letter-spacing: 0.3px;
-        }
-
-        .input-section {
-            padding: 24px;
-            border-bottom: 1px solid #f0f0f0;
-            flex-shrink: 0;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-
-        label {
-            display: block;
-            font-size: 12px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-        }
-
-        .input-wrapper {
-            display: flex;
-            gap: 12px;
-        }
-
-        input {
-            flex: 1;
-            padding: 13px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 500;
-        }
-
-        input::placeholder {
-            color: #b0bec5;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15);
-        }
-
-        button {
-            padding: 13px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            white-space: nowrap;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-        }
-
-        button:active {
-            transform: translateY(-1px);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .status-banner {
-            padding: 16px 24px;
-            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-            border-left: 4px solid #667eea;
-            font-size: 13px;
-            color: #333;
-            display: none;
-            flex-shrink: 0;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .status-banner.active {
-            display: flex;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            background: #667eea;
-            color: white;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            flex-shrink: 0;
-        }
-
-        .status-text {
-            flex: 1;
-            word-break: break-word;
-        }
-
-        .gps-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            color: #667eea;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            flex-shrink: 0;
-        }
-
-        .gps-dot {
-            width: 8px;
-            height: 8px;
-            background: #667eea;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
-            }
-            50% {
-                box-shadow: 0 0 0 6px rgba(102, 126, 234, 0.3);
-            }
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .route-info {
-            padding: 20px 24px;
-            background: #f8f9ff;
-            border-bottom: 1px solid #e8eaf6;
-            flex-shrink: 0;
-            display: none;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .route-info.active {
-            display: block;
-        }
-
-        .route-info h2 {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .bus-number {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .route-progress {
-            font-size: 13px;
-            color: #666;
-            line-height: 1.5;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 3px;
-            transition: width 0.5s ease-out;
-        }
-
-        .content-section {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .content-section::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .content-section::-webkit-scrollbar-track {
-            background: #f5f5f5;
-        }
-
-        .content-section::-webkit-scrollbar-thumb {
-            background: #c0c0c0;
-            border-radius: 3px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .empty-state-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-
-        .empty-state-text {
-            font-size: 14px;
-            line-height: 1.8;
-            color: #999;
-        }
-
-        .loading-state {
-            text-align: center;
-            padding: 40px 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            display: none;
-        }
-
-        .loading-state.active {
-            display: flex;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            margin: 0 auto 20px;
-            border: 4px solid #f0f0f0;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .loading-text {
-            color: #666;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .tracker-content {
-            display: none;
-        }
-
-        .tracker-content.active {
-            display: block;
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        .location-info {
-            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
-            color: white;
-            padding: 24px;
-            border-radius: 14px;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 16px rgba(255, 152, 0, 0.3);
-            animation: slideUp 0.5s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .location-label {
-            font-size: 12px;
-            opacity: 0.95;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 700;
-        }
-
-        .current-station {
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            letter-spacing: -0.5px;
-        }
-
-        .location-details {
-            font-size: 12px;
-            opacity: 0.9;
-            line-height: 1.6;
-        }
-
-        .next-stations {
-            margin-bottom: 24px;
-        }
-
-        .next-stations h3 {
-            font-size: 14px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .station-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .station-card {
-            background: white;
-            border: 2px solid #e8eaf6;
-            border-radius: 12px;
-            padding: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            cursor: default;
-        }
-
-        .station-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 4px;
-            background: #e8eaf6;
-            transition: background 0.3s ease;
-        }
-
-        .station-card:hover {
-            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .station-card.next {
-            background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
-            border-color: #667eea;
-            border-left-width: 4px;
-        }
-
-        .station-card.next::before {
-            display: none;
-        }
-
-        .station-card.stop {
-            border-left-color: #4caf50;
-            border-left-width: 4px;
-        }
-
-        .station-card.stop::before {
-            display: none;
-        }
-
-        .station-number {
-            font-size: 11px;
-            color: #999;
-            margin-bottom: 6px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-        }
-
-        .station-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-            word-break: break-word;
-            letter-spacing: -0.3px;
-        }
-
-        .station-meta {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            font-size: 12px;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 5px 10px;
-            background: #f0f0f0;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            color: #666;
-        }
-
-        .badge.stop {
-            background: #c8e6c9;
-            color: #2e7d32;
-        }
-
-        .badge.pass {
-            background: #f5f5f5;
-            color: #757575;
-        }
-
-        .badge.distance {
-            background: #e1f5fe;
-            color: #01579b;
-        }
-
-        .badge.demo {
-            background: #ffe0b2;
-            color: #e65100;
-            animation: pulse 2s infinite;
-        }
-
-        .bell-alert {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e72 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            text-align: center;
-            animation: shake 0.6s ease-out;
-            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.3);
-            display: none;
-        }
-
-        .bell-alert.active {
-            display: block;
-        }
-
-        @keyframes shake {
-            0%, 100% {
-                transform: translateX(0);
-            }
-            25% {
-                transform: translateX(-8px);
-            }
-            75% {
-                transform: translateX(8px);
-            }
-        }
-
-        .bell-alert h4 {
-            font-size: 18px;
-            margin-bottom: 8px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-        }
-
-        .bell-alert p {
-            font-size: 13px;
-            line-height: 1.6;
-            margin: 0;
-        }
-
-        .error {
-            background: #ffebee;
-            border-left: 4px solid #ff6b6b;
-            color: #c62828;
-            padding: 14px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 16px;
-            display: none;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .error.show {
-            display: block;
-        }
-
-        .stop-button {
-            padding: 13px 24px;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e72 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-            width: 100%;
-            margin-top: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stop-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(255, 107, 107, 0.4);
-        }
-
-        @media (max-width: 1200px) {
-            .main-container {
-                flex-direction: column;
-            }
-
-            .map-container {
-                height: 45vh;
-                min-height: 300px;
-            }
-
-            .control-panel {
-                max-width: 100%;
-                height: 55vh;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main-container {
-                flex-direction: column;
-            }
-
-            .map-container {
-                height: 40vh;
-                min-height: 250px;
-            }
-
-            .control-panel {
-                max-width: 100%;
-                height: 60vh;
-            }
-
-            .header {
-                padding: 20px 16px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .input-section {
-                padding: 16px;
-            }
-
-            .content-section {
-                padding: 16px;
-            }
-
-            .current-station {
-                font-size: 22px;
-            }
-
-            .station-name {
-                font-size: 15px;
-            }
-
-            .input-wrapper {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .map-container {
-                height: 35vh;
-            }
-
-            .control-panel {
-                height: 65vh;
-            }
-
-            .header h1 {
-                font-size: 22px;
-            }
-
-            .status-banner {
-                padding: 12px 16px;
-                gap: 8px;
-                font-size: 12px;
-            }
-
-            .location-info {
-                padding: 16px;
-                margin-bottom: 16px;
-            }
-
-            .current-station {
-                font-size: 20px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Bus Tracker MVP</title>
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+    }
+    .box {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="main-container">
-        <div class="map-container">
-            <div class="map-canvas-wrapper">
-                <canvas id="mapCanvas"></canvas>
-            </div>
-        </div>
-
-        <div class="control-panel">
-            <div class="header">
-                <h1>🚌 實時公車追蹤</h1>
-                <p>輸入車號，GPS自動定位你的位置</p>
-            </div>
-
-            <div class="input-section">
-                <div class="form-group">
-                    <label for="busNumber">公車號碼</label>
-                    <div class="input-wrapper">
-                        <input 
-                            type="text" 
-                            id="busNumber" 
-                            placeholder="例如：307"
-                            autocomplete="off"
-                            maxlength="10"
-                        >
-                        <button id="startBtn" onclick="startTracking()">開始追蹤</button>
-                    </div>
-                </div>
-                <div class="error" id="errorMessage"></div>
-            </div>
-
-            <div class="status-banner" id="statusBanner">
-                <span class="status-badge">📍 定位中</span>
-                <span class="status-text" id="statusText">正在獲取您的位置...</span>
-                <span class="gps-indicator">
-                    <span class="gps-dot"></span> GPS
-                </span>
-            </div>
-
-            <div class="route-info" id="routeInfo">
-                <h2>
-                    <span class="bus-number" id="busNumberDisplay"></span>
-                </h2>
-                <div class="route-progress">
-                    <div id="routeProgress"></div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="content-section" id="contentSection">
-                <div class="empty-state" id="emptyState">
-                    <div class="empty-state-icon">🚍</div>
-                    <div class="empty-state-text">
-                        輸入公車號碼並點擊"開始追蹤"<br>
-                        系統將自動獲取您的GPS位置<br>
-                        並顯示當前車站和下一站
-                    </div>
-                </div>
-
-                <div class="loading-state" id="loadingState">
-                    <div class="spinner"></div>
-                    <div class="loading-text">正在獲取路線信息...</div>
-                </div>
-
-                <div class="tracker-content" id="trackerContent">
-                    <div class="location-info" id="locationInfo"></div>
-
-                    <div class="bell-alert" id="bellAlert">
-                        <h4>🔔 準備下車！</h4>
-                        <p id="bellAlertText"></p>
-                    </div>
-
-                    <div class="next-stations">
-                        <h3>📍 接下來的站點</h3>
-                        <div class="station-list" id="stationList"></div>
-                    </div>
-
-                    <button class="stop-button" onclick="stopTracking()">停止追蹤</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const busRoutes = {
-            '307': {
-                name: '307',
-                startStation: '美亭客運站',
-                endStation: '水月門客運站',
-                stations: [
-                    { id: 1, name: '美亭客運站', lat: 21.0285, lng: 105.8581, type: 'stop' },
-                    { id: 2, name: '明開路口', lat: 21.0312, lng: 105.8505, type: 'pass' },
-                    { id: 3, name: '高街', lat: 21.0345, lng: 105.8421, type: 'stop' },
-                    { id: 4, name: '富輝街', lat: 21.0378, lng: 105.8345, type: 'pass' },
-                    { id: 5, name: '白黨', lat: 21.0411, lng: 105.8268, type: 'stop' },
-                    { id: 6, name: '清宣', lat: 21.0444, lng: 105.8192, type: 'pass' },
-                    { id: 7, name: '堪騰', lat: 21.0477, lng: 105.8115, type: 'stop' },
-                    { id: 8, name: '源所', lat: 21.0510, lng: 105.8039, type: 'pass' },
-                    { id: 9, name: '殿驢', lat: 21.0543, lng: 105.7962, type: 'stop' },
-                    { id: 10, name: '杭開', lat: 21.0576, lng: 105.7886, type: 'pass' },
-                    { id: 11, name: '菜市', lat: 21.0609, lng: 105.7809, type: 'stop' },
-                    { id: 12, name: '青煙', lat: 21.0642, lng: 105.7733, type: 'pass' },
-                    { id: 13, name: '河東', lat: 21.0675, lng: 105.7656, type: 'stop' },
-                    { id: 14, name: '懷德', lat: 21.0708, lng: 105.7580, type: 'pass' },
-                    { id: 15, name: '水月門', lat: 21.0741, lng: 105.7503, type: 'stop' }
-                ]
-            },
-            '106': {
-                name: '106',
-                startStation: '北方客運站',
-                endStation: '水月門',
-                stations: [
-                    { id: 1, name: '北方客運站', lat: 21.0450, lng: 105.8200, type: 'stop' },
-                    { id: 2, name: '教堂博克', lat: 21.0480, lng: 105.8150, type: 'pass' },
-                    { id: 3, name: '市場', lat: 21.0510, lng: 105.8100, type: 'stop' },
-                    { id: 4, name: '講武', lat: 21.0540, lng: 105.8050, type: 'pass' },
-                    { id: 5, name: '肉市', lat: 21.0570, lng: 105.8000, type: 'stop' },
-                    { id: 6, name: '解放街', lat: 21.0600, lng: 105.7950, type: 'pass' },
-                    { id: 7, name: '鷹雞街', lat: 21.0630, lng: 105.7900, type: 'stop' },
-                    { id: 8, name: '武陵湖', lat: 21.0660, lng: 105.7850, type: 'pass' },
-                    { id: 9, name: '黃梅街', lat: 21.0690, lng: 105.7800, type: 'stop' },
-                    { id: 10, name: '菜市堂', lat: 21.0720, lng: 105.7750, type: 'pass' },
-                    { id: 11, name: '擺渡街', lat: 21.0750, lng: 105.7700, type: 'stop' },
-                    { id: 12, name: '水月門', lat: 21.0780, lng: 105.7650, type: 'stop' }
-                ]
-            },
-            '50': {
-                name: '50',
-                startStation: '東安客運站',
-                endStation: '水月門',
-                stations: [
-                    { id: 1, name: '東安客運站', lat: 21.1000, lng: 105.9000, type: 'stop' },
-                    { id: 2, name: '三橡', lat: 21.0950, lng: 105.8900, type: 'pass' },
-                    { id: 3, name: '聖凍', lat: 21.0900, lng: 105.8800, type: 'stop' },
-                    { id: 4, name: '青賓', lat: 21.0850, lng: 105.8700, type: 'pass' },
-                    { id: 5, name: '下定', lat: 21.0800, lng: 105.8600, type: 'stop' },
-                    { id: 6, name: '安聖', lat: 21.0750, lng: 105.8500, type: 'pass' },
-                    { id: 7, name: '符全', lat: 21.0700, lng: 105.8400, type: 'stop' },
-                    { id: 8, name: '大慾', lat: 21.0650, lng: 105.8300, type: 'pass' },
-                    { id: 9, name: '家村', lat: 21.0600, lng: 105.8200, type: 'stop' },
-                    { id: 10, name: '多立', lat: 21.0550, lng: 105.8100, type: 'pass' },
-                    { id: 11, name: '杭蓬', lat: 21.0500, lng: 105.8000, type: 'stop' },
-                    { id: 12, name: '水月門', lat: 21.0450, lng: 105.7900, type: 'stop' }
-                ]
-            }
-        };
-
-        let currentUserLocation = null;
-        let currentRoute = null;
-        let currentStationIndex = -1;
-        let gpsWatchId = null;
-        let isTracking = false;
-        let isDemoMode = false;
-        let demoInterval = null;
-
-        function showError(message) {
-            const errorEl = document.getElementById('errorMessage');
-            errorEl.textContent = message;
-            errorEl.classList.add('show');
-            setTimeout(() => {
-                errorEl.classList.remove('show');
-            }, 5000);
-        }
-
-        function getDistance(lat1, lng1, lat2, lng2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLng = (lng2 - lng1) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLng / 2) * Math.sin(dLng / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c * 1000;
-        }
-
-        function findNearestStation(userLat, userLng) {
-            let nearestIndex = 0;
-            let minDistance = Infinity;
-
-            currentRoute.stations.forEach((station, index) => {
-                const distance = getDistance(userLat, userLng, station.lat, station.lng);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    nearestIndex = index;
-                }
-            });
-
-            return { index: nearestIndex, distance: minDistance };
-        }
-
-        function updateTrackerDisplay(userLat, userLng) {
-            const result = findNearestStation(userLat, userLng);
-            currentStationIndex = result.index;
-
-            const currentStation = currentRoute.stations[currentStationIndex];
-
-            const locationInfo = document.getElementById('locationInfo');
-            locationInfo.innerHTML = `
-                <div class="location-label">🎯 您當前在此站</div>
-                <div class="current-station">${currentStation.name}</div>
-                <div class="location-details">
-                    距離：${Math.round(result.distance)} 米<br>
-                    時間：${new Date().toLocaleTimeString('zh-TW')}
-                </div>
-            `;
-
-            const progress = Math.round((currentStationIndex / (currentRoute.stations.length - 1)) * 100);
-            document.getElementById('routeProgress').textContent = 
-                `已完成 ${progress}% • 第 ${currentStationIndex + 1} 站，共 ${currentRoute.stations.length} 站`;
-            document.getElementById('progressFill').style.width = progress + '%';
-
-            const stationList = document.getElementById('stationList');
-            stationList.innerHTML = '';
-            const bellAlert = document.getElementById('bellAlert');
-            bellAlert.classList.remove('active');
-
-            let hasNextStop = false;
-            for (let i = currentStationIndex + 1; i < Math.min(currentStationIndex + 6, currentRoute.stations.length); i++) {
-                const station = currentRoute.stations[i];
-                const isStop = station.type === 'stop';
-                const stopsCount = i - currentStationIndex;
-                const distance = getDistance(userLat, userLng, station.lat, station.lng);
-
-                const card = document.createElement('div');
-                card.className = `station-card ${i === currentStationIndex + 1 ? 'next' : ''} ${isStop ? 'stop' : ''}`;
-                
-                let distanceText = '';
-                if (distance > 1000) {
-                    distanceText = `${(distance / 1000).toFixed(1)}km`;
-                } else {
-                    distanceText = `${Math.round(distance)}m`;
-                }
-
-                let badgeClass = isStop ? 'stop' : 'pass';
-                if (isDemoMode) badgeClass += ' demo';
-
-                card.innerHTML = `
-                    <div class="station-number">第 ${i + 1} 站 • 還有 ${stopsCount} 站</div>
-                    <div class="station-name">${station.name}</div>
-                    <div class="station-meta">
-                        <span class="badge ${badgeClass}">
-                            ${isStop ? '🟢 停靠站' : '⚪ 經過'}
-                        </span>
-                        <span class="badge distance">📍 ${distanceText}</span>
-                    </div>
-                `;
-                stationList.appendChild(card);
-
-                if (i === currentStationIndex + 1 && isStop && !hasNextStop) {
-                    hasNextStop = true;
-                    const bellAlertText = document.getElementById('bellAlertText');
-                    bellAlertText.innerHTML = `<strong>${station.name}</strong> 是您的下一個停靠站<br>請準備按下車鈴！`;
-                    bellAlert.classList.add('active');
-                }
-            }
-        }
-
-        function onGpsSuccess(position) {
-            const { latitude, longitude, accuracy } = position.coords;
-            currentUserLocation = { lat: latitude, lng: longitude };
-
-            document.getElementById('statusBanner').classList.add('active');
-            document.getElementById('statusText').textContent = 
-                `📍 ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (精度: ±${Math.round(accuracy)}m)`;
-
-            if (currentRoute && isTracking) {
-                updateTrackerDisplay(latitude, longitude);
-            }
-        }
-
-        function onGpsError(error) {
-            console.warn('GPS錯誤:', error.message);
-            if (!isDemoMode && currentRoute) {
-                isDemoMode = true;
-                startDemoMode();
-            }
-        }
-
-        function startDemoMode() {
-            console.log('啟用演示模式：公車沿路線移動');
-            
-            document.getElementById('statusBanner').classList.add('active');
-            document.getElementById('statusText').textContent = 
-                `📍 演示模式：自動沿路線移動`;
-            
-            let demoIndex = 1;
-            
-            if (demoInterval) clearInterval(demoInterval);
-            
-            demoInterval = setInterval(() => {
-                if (demoIndex >= currentRoute.stations.length) {
-                    demoIndex = 1;
-                }
-                
-                const station = currentRoute.stations[demoIndex];
-                const nextStationIndex = Math.min(demoIndex + 1, currentRoute.stations.length - 1);
-                const nextStation = currentRoute.stations[nextStationIndex];
-                
-                const ratio = Math.random();
-                const demoLat = station.lat + (nextStation.lat - station.lat) * ratio;
-                const demoLng = station.lng + (nextStation.lng - station.lng) * ratio;
-                
-                currentUserLocation = { lat: demoLat, lng: demoLng };
-                updateTrackerDisplay(demoLat, demoLng);
-                
-                demoIndex++;
-            }, 3000);
-        }
-
-        function startTracking() {
-            const busNumber = document.getElementById('busNumber').value.trim().toUpperCase();
-            const errorEl = document.getElementById('errorMessage');
-            errorEl.classList.remove('show');
-
-            if (!busNumber) {
-                showError('❌ 請輸入公車號碼');
-                return;
-            }
-
-            const route = busRoutes[busNumber];
-            if (!route) {
-                showError(`❌ 未找到公車 ${busNumber}，試試：307、106、50`);
-                return;
-            }
-
-            currentRoute = route;
-            isTracking = true;
-            isDemoMode = false;
-            document.getElementById('startBtn').disabled = true;
-
-            document.getElementById('busNumberDisplay').textContent = busNumber;
-            document.getElementById('routeInfo').classList.add('active');
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('loadingState').classList.add('active');
-            document.getElementById('trackerContent').classList.remove('active');
-
-            if (gpsWatchId) {
-                navigator.geolocation.clearWatch(gpsWatchId);
-            }
-            if (demoInterval) {
-                clearInterval(demoInterval);
-            }
-
-            if (navigator.geolocation) {
-                const timeoutId = setTimeout(() => {
-                    if (!currentUserLocation) {
-                        console.log('GPS超時，啟用演示模式');
-                        isDemoMode = true;
-                        startDemoMode();
-                        document.getElementById('loadingState').classList.remove('active');
-                        document.getElementById('trackerContent').classList.add('active');
-                    }
-                }, 3000);
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        clearTimeout(timeoutId);
-                        isDemoMode = false;
-                        onGpsSuccess(position);
-                        document.getElementById('loadingState').classList.remove('active');
-                        document.getElementById('trackerContent').classList.add('active');
-                        
-                        gpsWatchId = navigator.geolocation.watchPosition(
-                            onGpsSuccess,
-                            onGpsError,
-                            {
-                                enableHighAccuracy: true,
-                                timeout: 10000,
-                                maximumAge: 3000
-                            }
-                        );
-                    },
-                    (error) => {
-                        clearTimeout(timeoutId);
-                        console.warn('GPS被拒絕:', error.message);
-                        isDemoMode = true;
-                        startDemoMode();
-                        document.getElementById('loadingState').classList.remove('active');
-                        document.getElementById('trackerContent').classList.add('active');
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 5000,
-                        maximumAge: 0
-                    }
-                );
-            } else {
-                showError('❌ 您的瀏覽器不支援GPS定位');
-                document.getElementById('startBtn').disabled = false;
-            }
-        }
-
-        function stopTracking() {
-            isTracking = false;
-            isDemoMode = false;
-
-            if (gpsWatchId) {
-                navigator.geolocation.clearWatch(gpsWatchId);
-                gpsWatchId = null;
-            }
-
-            if (demoInterval) {
-                clearInterval(demoInterval);
-                demoInterval = null;
-            }
-
-            currentUserLocation = null;
-            currentRoute = null;
-            currentStationIndex = -1;
-
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('busNumber').value = '';
-            document.getElementById('statusBanner').classList.remove('active');
-            document.getElementById('routeInfo').classList.remove('active');
-            document.getElementById('loadingState').classList.remove('active');
-            document.getElementById('trackerContent').classList.remove('active');
-            document.getElementById('emptyState').style.display = 'flex';
-        }
-
-        function initMap() {
-            const canvas = document.getElementById('mapCanvas');
-            const ctx = canvas.getContext('2d');
-            const dpr = window.devicePixelRatio || 1;
-
-            function resizeCanvas() {
-                canvas.width = canvas.offsetWidth * dpr;
-                canvas.height = canvas.offsetHeight * dpr;
-                ctx.scale(dpr, dpr);
-            }
-
-            function drawMap() {
-                const w = canvas.offsetWidth;
-                const h = canvas.offsetHeight;
-
-                ctx.fillStyle = '#f5f7ff';
-                ctx.fillRect(0, 0, w, h);
-
-                ctx.strokeStyle = '#e0e7ff';
-                ctx.lineWidth = 1;
-                for (let i = 0; i < w; i += 50) {
-                    ctx.beginPath();
-                    ctx.moveTo(i, 0);
-                    ctx.lineTo(i, h);
-                    ctx.stroke();
-                }
-                for (let i = 0; i < h; i += 50) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, i);
-                    ctx.lineTo(w, i);
-                    ctx.stroke();
-                }
-
-                if (currentRoute) {
-                    const padding = 60;
-                    const availWidth = w - 2 * padding;
-                    const availHeight = h - 2 * padding;
-
-                    let minLat = Infinity, maxLat = -Infinity;
-                    let minLng = Infinity, maxLng = -Infinity;
-                    currentRoute.stations.forEach(s => {
-                        minLat = Math.min(minLat, s.lat);
-                        maxLat = Math.max(maxLat, s.lat);
-                        minLng = Math.min(minLng, s.lng);
-                        maxLng = Math.max(maxLng, s.lng);
-                    });
-
-                    const latRange = maxLat - minLat || 1;
-                    const lngRange = maxLng - minLng || 1;
-
-                    const toScreenX = (lng) => padding + ((lng - minLng) / lngRange) * availWidth;
-                    const toScreenY = (lat) => padding + h - ((lat - minLat) / latRange) * availHeight;
-
-                    ctx.strokeStyle = '#667eea';
-                    ctx.lineWidth = 3;
-                    ctx.lineJoin = 'round';
-                    ctx.lineCap = 'round';
-                    ctx.beginPath();
-                    ctx.moveTo(toScreenX(currentRoute.stations[0].lng), toScreenY(currentRoute.stations[0].lat));
-                    for (let i = 1; i < currentRoute.stations.length; i++) {
-                        ctx.lineTo(toScreenX(currentRoute.stations[i].lng), toScreenY(currentRoute.stations[i].lat));
-                    }
-                    ctx.stroke();
-
-                    currentRoute.stations.forEach((station, index) => {
-                        const x = toScreenX(station.lng);
-                        const y = toScreenY(station.lat);
-
-                        if (station.type === 'stop') {
-                            ctx.fillStyle = '#4caf50';
-                            ctx.beginPath();
-                            ctx.arc(x, y, 6, 0, Math.PI * 2);
-                            ctx.fill();
-                        } else {
-                            ctx.fillStyle = '#c0c0c0';
-                            ctx.beginPath();
-                            ctx.arc(x, y, 4, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-
-                        if (index === currentStationIndex) {
-                            ctx.strokeStyle = '#ffc107';
-                            ctx.lineWidth = 4;
-                            ctx.beginPath();
-                            ctx.arc(x, y, 10, 0, Math.PI * 2);
-                            ctx.stroke();
-                        }
-                    });
-
-                    if (currentUserLocation) {
-                        const userX = toScreenX(currentUserLocation.lng);
-                        const userY = toScreenY(currentUserLocation.lat);
-                        ctx.fillStyle = '#ff9800';
-                        ctx.beginPath();
-                        ctx.arc(userX, userY, 7, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.strokeStyle = 'white';
-                        ctx.lineWidth = 2;
-                        ctx.stroke();
-                    }
-                } else {
-                    ctx.fillStyle = '#667eea';
-                    ctx.font = 'bold 18px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('📍 輸入公車號碼', w / 2, h / 2 - 20);
-                    ctx.font = '14px sans-serif';
-                    ctx.fillStyle = '#999';
-                    ctx.fillText('系統將在此顯示您的路線', w / 2, h / 2 + 20);
-                }
-            }
-
-            resizeCanvas();
-            drawMap();
-
-            setInterval(drawMap, 500);
-
-            window.addEventListener('resize', () => {
-                resizeCanvas();
-                drawMap();
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initMap();
-            
-            document.getElementById('busNumber').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !document.getElementById('startBtn').disabled) {
-                    startTracking();
-                }
-            });
-
-            window.addEventListener('beforeunload', () => {
-                if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
-                if (demoInterval) clearInterval(demoInterval);
-            });
-        });
-    </script>
+
+<h2>🚌 公車追蹤 MVP</h2>
+
+<input id="routeInput" placeholder="輸入路線（307 / 262 / 紅33）" />
+<button onclick="start()">開始追蹤</button>
+
+<div class="box">
+  <div>Token：</div>
+  <div id="tokenStatus">尚未取得</div>
+</div>
+
+<div class="box">
+  <div>最近公車：</div>
+  <div id="busInfo">-</div>
+</div>
+
+<div class="box">
+  <div>距離：</div>
+  <div id="distance">-</div>
+</div>
+
+<script>
+const CLIENT_ID = "YOUR_CLIENT_ID";
+const CLIENT_SECRET = "YOUR_CLIENT_SECRET";
+
+let token = null;
+let tokenExpireAt = 0;
+let timer = null;
+
+// ----------------------
+// 取得 token
+// ----------------------
+async function fetchToken() {
+  const res = await fetch(
+    "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET
+      })
+    }
+  );
+
+  const data = await res.json();
+
+  token = data.access_token;
+  tokenExpireAt = Date.now() + (data.expires_in - 60) * 1000;
+
+  document.getElementById("tokenStatus").innerText = "OK";
+}
+
+// ----------------------
+// token cache
+// ----------------------
+async function getToken() {
+  const now = Date.now();
+
+  if (!token || now >= tokenExpireAt) {
+    await fetchToken();
+  }
+
+  return token;
+}
+
+// ----------------------
+// distance
+// ----------------------
+function dist(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat/2)**2 +
+    Math.cos(lat1*Math.PI/180) *
+    Math.cos(lat2*Math.PI/180) *
+    Math.sin(dLon/2)**2;
+
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ----------------------
+// 取得公車
+// ----------------------
+async function fetchBuses(route) {
+  const t = await getToken();
+
+  const res = await fetch(
+    "https://tdx.transportdata.tw/api/basic/v2/Bus/RealTimeByFrequency/City/Taipei?$format=JSON",
+    {
+      headers: {
+        Authorization: "Bearer " + t
+      }
+    }
+  );
+
+  const data = await res.json();
+
+  return data.filter(x =>
+    x.RouteName?.Zh_tw === route
+  );
+}
+
+// ----------------------
+// 找最近車
+// ----------------------
+function findNearest(buses) {
+  let best = null;
+  let min = Infinity;
+
+  buses.forEach(b => {
+    if (!b.BusPosition) return;
+
+    const d = dist(
+      25.0330, 121.5654, // 先用台北預設位置（可再升級 GPS）
+      b.BusPosition.PositionLat,
+      b.BusPosition.PositionLon
+    );
+
+    if (d < min) {
+      min = d;
+      best = b;
+    }
+  });
+
+  return { best, min };
+}
+
+// ----------------------
+// 更新畫面
+// ----------------------
+async function update(route) {
+  const buses = await fetchBuses(route);
+
+  const { best, min } = findNearest(buses);
+
+  document.getElementById("busInfo").innerText =
+    best?.PlateNumb || "無資料";
+
+  document.getElementById("distance").innerText =
+    min.toFixed(2) + " km";
+}
+
+// ----------------------
+// start
+// ----------------------
+async function start() {
+  const route = document.getElementById("routeInput").value;
+
+  if (!route) return alert("請輸入路線");
+
+  await getToken();
+  await update(route);
+
+  if (timer) clearInterval(timer);
+
+  timer = setInterval(() => update(route), 10000);
+}
+</script>
+
 </body>
 </html>
